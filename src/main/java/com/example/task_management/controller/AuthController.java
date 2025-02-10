@@ -24,26 +24,31 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserDetailsService userDetailsService;
 
-    @PostMapping("/register")
-    public Map<String, String> register(@RequestBody User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            return Map.of("error", "Username already exists");
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return Map.of("message", "User registered successfully");
+   @PostMapping("/register")
+public Map<String, String> register(@RequestBody User user) {
+    if (userRepository.existsByUsername(user.getUsername())) {
+        return Map.of("error", "Username already exists");
     }
+    userService.saveUser(user, passwordEncoder); // Pass PasswordEncoder explicitly
+    return Map.of("message", "User registered successfully");
+}
 
-    @PostMapping("/login")
+
+   @PostMapping("/login")
     public Map<String, String> login(@RequestBody User user) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+        // 🔹 Load user details from the database
+        UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+        // 🔹 Check if the password matches
+        if (!passwordEncoder.matches(user.getPassword(), userDetails.getPassword())) {
+            return Map.of("error", "Invalid username or password");
+        }
+
+        // 🔹 Generate JWT Token
         String token = jwtUtils.generateToken(userDetails.getUsername());
 
         return Map.of("token", token);
     }
+
 }
