@@ -12,13 +12,14 @@ import java.util.function.Function;
 @Component
 public class JwtUtils {
 
-    private final String SECRET_KEY = "your-very-secure-256-bit-secret-key-change-it"; // Use a secure key
+    private final String SECRET_KEY = "your-very-secure-256-bit-secret-key-change-it"; //secure key
 
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10)) // 10 min expiry
+                //1000*60*60->1hrs
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
     }
